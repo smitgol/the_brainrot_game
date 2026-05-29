@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PageTransition } from "@/components/PageTransition";
 import { RankBadge } from "@/components/ui/RankBadge";
