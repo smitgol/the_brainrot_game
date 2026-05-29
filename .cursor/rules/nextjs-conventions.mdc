@@ -1,0 +1,24 @@
+---
+description: Next.js 14 App Router conventions for Focus Frenzy
+globs: app/**/*.tsx,app/**/*.ts,components/**/*.tsx
+alwaysApply: false
+---
+
+# Next.js 14 / App Router Conventions
+
+- App Router only. TypeScript everywhere. No `pages/` directory.
+- All game components and anything using browser APIs, hooks, Framer Motion, Konva, `localStorage`, `navigator`, `performance`, `AudioContext` → must start with `"use client"`.
+- Load Google Fonts ONLY via `next/font/google` in `app/layout.tsx` and expose as CSS vars. Never `@import` or `<link>` fonts.
+- Konva / react-konva touch `window` at import time → load via `next/dynamic` with `{ ssr: false }`. Never import `react-konva` in a server component.
+- Read shareable state from URL query params on `/result` (`useSearchParams`), not from global stores.
+- API route handlers: validate input, return typed JSON, never throw raw. Keep secrets (service role key) server-side only.
+- Wrap any component using `useSearchParams` in a `<Suspense>` boundary.
+
+```tsx
+// Konva loaded client-only
+const TrainCanvas = dynamic(() => import("./TrainCanvas"), { ssr: false });
+```
+
+## Animations (Framer Motion)
+- Gate every animation behind a `prefers-reduced-motion` check (e.g. a `useReducedMotion()` hook); render static fallback when reduced.
+- Page transitions: `opacity 0→1`, `y 20→0`, `duration 0.3`.

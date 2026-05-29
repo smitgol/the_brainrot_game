@@ -1,0 +1,42 @@
+---
+description: Train Dispatch game loop + Konva performance rules
+globs: components/games/TrainDispatch/**/*.ts,components/games/TrainDispatch/**/*.tsx
+alwaysApply: false
+---
+
+# Train Dispatch Engine Rules
+
+The 60fps rAF loop is the perf-critical path. Get this wrong and the game lags.
+
+## State (CRITICAL)
+- NEVER put the `trains` array or per-frame positions in `useState`. Store ALL mutable
+  game state (trains, switches, positions, tick) in `useRef`.
+- Only `useState` low-frequency, render-triggering values: `score`, `lives`, `level`, `streak`.
+- Re-render the Konva layer each frame with a lightweight `forceUpdate` (bump a counter),
+  not by setting the trains array into state.
+
+```ts
+// BAD
+const [trains, setTrains] = useState<Train[]>([]); // rAF + setState = lag
+
+// GOOD
+const trainsRef = useRef<Train[]>([]);
+const [, forceUpdate] = useReducer((n) => n + 1, 0);
+// in rAF tick: mutate trainsRef.current, then forceUpdate()
+```
+
+## Loop lifecycle
+- Start `requestAnimationFrame` in `useEffect` on mount; store id in a `useRef`.
+- ALWAYS `cancelAnimationFrame` in the effect cleanup. No leaked loops.
+- Hook returns `{ trains, switches, score, lives, level, toggleSwitch(id) }`.
+
+## Movement & collision
+- Track segments = arrays of `{x, y}` waypoints. Interpolate with `lerp()`.
+- Advance to next segment when distance to next waypoint `< 2px`.
+- At a switch, read switch state (`straight | divert`) to pick the next segment.
+- CRASH when two trains are `< 20px` apart on the same segment, or a train hits the wrong platform.
+
+## Konva touch (mobile)
+- Stage must resize with container via `ResizeObserver`; `Stage width={containerWidth}`.
+- Switch hit areas min 44px: wrap the visible `Circle` with a transparent `Rect` or use `hitStrokeWidth`.
+- Use `onTouchStart` on switches, not `onClick` alone — canvas touch != mouse.

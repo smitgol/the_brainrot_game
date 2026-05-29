@@ -1,0 +1,44 @@
+---
+description: Supabase leaderboard + API route conventions
+globs: lib/supabase.ts,lib/scores.ts,lib/leaderboardLimits.ts,app/api/**/*.ts,supabase/**
+alwaysApply: false
+---
+
+# Supabase / Leaderboard Rules
+
+Backend is wired via env vars only. The app MUST still run if Supabase is unconfigured.
+
+## Env vars
+- Client: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Migrations (local): `DATABASE_URL` in `.env.local` (never commit).
+- Server-only (optional): `SUPABASE_SERVICE_ROLE_KEY`. NEVER expose to the client.
+
+## Clients
+- If env vars are missing, return `null`/no-op and fall back to `localStorage`. Do not crash.
+
+## Validation (shared)
+- Use `lib/leaderboardLimits.ts` for caps and `validateScorePayload()` in `POST /api/score`.
+- DB enforces the same rules via `scores_insert_allowed()` + RLS (see `supabase/migrations/002_tighten_rls.sql`).
+
+## Score caps (per mode)
+- `reaction`: 250 score, level 5
+- `memory`: 25000 score, level 200
+- `train`: 50000 score, level 200
+- `echo`: 15000 score, level 50
+
+## Rate limits
+- 15 submissions per player name per hour (all modes)
+- 6 per player per mode per hour
+- API also limits 20 POSTs/min per IP on `/api/score`
+
+## API routes
+- `POST /api/score`: validate → insert → `{ rank }`. Return 400 (bad payload), 429 (rate limit).
+- `GET /api/leaderboard?mode=`: top 20 by score desc.
+
+## Migrations
+- `npm run db:migrate` runs `supabase/schema.sql` then `supabase/migrations/*.sql` (needs `DATABASE_URL`).
+
+```ts
+const validated = validateScorePayload(body, isGameMode);
+if (!validated.ok) return NextResponse.json({ error: ... }, { status: 400 });
+```

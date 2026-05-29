@@ -1,0 +1,38 @@
+---
+description: Focus Frenzy project structure, game specs, and shared contracts
+alwaysApply: true
+---
+
+# Focus Frenzy — Project Overview
+
+Viral attention-training PWA. Stack: Next.js 14 (App Router, TS), Tailwind, Konva/react-konva (Train game), Framer Motion, Supabase, next/og, PWA.
+
+## Structure (follow exactly)
+```
+app/{page,result/page,leaderboard/page}.tsx
+app/game/{train,memory,reaction}/page.tsx
+app/api/{score,leaderboard}/route.ts · app/og/route.tsx
+components/games/{TrainDispatch,MemorySequence,ReactionRush}/
+components/ui/{GameHeader,TimerBar,LivesDisplay,ScorePopup,Toast,ShareCard}.tsx
+lib/{supabase,scores,gameLogic}.ts
+public/{manifest.json,icons/}
+```
+
+## Game specs (source of truth)
+- Train Dispatch: route trains to correct platforms via tap-switches; collide = crash. +20/delivery + time bonus; 3x streak → level up; -1 life per crash/wrong platform. See train-game-engine rule.
+- Memory Sequence: flash digits (900ms→min 400ms, -50ms/level), len 2→max 9 (+1/level), 8s recall, per-tap green/red, 3 lives. Score `(len×10)+(level×5)`.
+- Reaction Rush: random 1.5–5s delay, tap within 2000ms, tap-early = -5 & reset. Use `performance.now()` (NOT `Date.now()`). 5 rounds. Tiers: <200→50, <300→35, <400→25, <600→15, else 5. Show Last/Best/Avg.
+
+## Result tiers (by score)
+0-19 "Brain rot detected 💀" · 20-49 "You're warming up 🌱" · 50-99 "Getting focused ⚡" · 100-199 "Certified focus god 🔥" · 200+ "Big brain energy 🧠"
+
+## Shared contracts
+- `GameHeader { onBack, score, lives, level, streak }` — streak badge only when `streak >= 3`.
+- `TimerBar { duration, onEnd }` — teal >50%, yellow 25-50%, red <25%.
+- `Toast { message, type: 'success'|'danger'|'warn' }` — auto-dismiss 1400ms.
+- `ScorePopup { points, x, y }` — Framer float up + fade, then unmount.
+- localStorage keys: `ff_best_score`, `ff_games_played`, `ff_win_streak`.
+
+## Feedback
+- Haptics: correct `vibrate(40)`, wrong `vibrate([80,30,80])`, level-up `vibrate([40,20,40,20,100])`.
+- Sound (Web Audio, no lib): create `AudioContext` on first user interaction only.

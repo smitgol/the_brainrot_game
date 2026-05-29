@@ -1,0 +1,41 @@
+---
+description: Focus Frenzy visual design system (colors, fonts, layout) - NON-NEGOTIABLE
+alwaysApply: true
+---
+
+# Focus Frenzy Design System
+
+Dark, raw, brutalist indie-game look. Must NOT look AI-generated.
+
+## Banned (never use)
+- Inter, Roboto, system-ui, or any default sans font
+- Purple gradients as the primary background/brand fill
+- Generic colored `box-shadow` (e.g. `shadow-lg`, `shadow-md`)
+- White cards or light backgrounds
+- `border-radius` > 14px on buttons
+
+## Colors (Tailwind tokens — use these names only)
+`bg #0a0a0f` · `surface #12121a` · `card #1a1a26` · `border rgba(255,255,255,0.06)`
+`accent #ff2d55` · `teal #00f5d4` · `yellow #ffd60a` · `purple #bf5af2`
+`muted #6e6e7a` · `success #30d158` · `danger #ff453a`
+
+## Fonts (via `next/font/google` CSS vars)
+- Display/logo/scores: **Bebas Neue** (`font-display`), letter-spacing `-1px` to `-2px`
+- Labels/buttons: **Archivo Black** (`font-label`), letter-spacing `+2px` to `+4px`
+- Body/mono: **Space Mono** (`font-mono`)
+
+## Rules
+- Borders: `1px solid rgba(255,255,255,0.06)` — thin, never harsh.
+- Neon glow ONLY on score numbers: `filter: drop-shadow(0 0 12px <color>)`. Nowhere else.
+- Buttons: solid background (not outlined), `rounded-[14px]` max, active state `scale-[0.96]`.
+- Min font size 11px. Scores in Bebas Neue, min 28px.
+- Mobile-first: `max-w-[480px]` centered. Touch targets min 44px.
+- Keep the global grain (SVG `body::before`) + scanline (`body::after`) overlays intact.
+
+```tsx
+// BAD: AI-default card
+<div className="rounded-2xl bg-white shadow-lg p-4 font-sans">
+
+// GOOD
+<div className="rounded-[12px] bg-card border border-border p-4 font-mono">
+```
